@@ -12,7 +12,7 @@ VolumeName="VOLUMENAME_NAME_TAG_VALUE"
 #########################
 volumeId=`aws --region $Region ec2 describe-volumes --filters "Name=tag:Name,Values=$VolumeName" --query 'Volumes[].VolumeId' --output text`
 echo "detaching a volume from instance"
-aws --region us-east-2 ec2 detach-volume --volume-id $volumeId --instance-id $InstanceId
+aws --region $Region ec2 detach-volume --volume-id $volumeId --instance-id $InstanceId
 echo "Waiting for volume to be available"
 aws --region $Region ec2 wait volume-available --volume-ids $volumeId
 echo "deleting volume"
