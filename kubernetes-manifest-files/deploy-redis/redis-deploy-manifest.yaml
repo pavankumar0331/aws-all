@@ -1,0 +1,82 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-volume
+  annotations:
+    description: this storageclass enables endusers to provision gp2 volumes in aws
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+  zone: us-east-2a
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-sts
+  labels:
+    env: qa-synon
+  annotations:
+    description: Statefulset for redis
+spec:
+  serviceName: synon-redis-master
+  selector:
+    matchLabels:
+      app: synon
+  replicas: 1
+  ##list of volumeclaims that it should refer
+  template:
+    metadata:
+       name: qa-redis
+       labels:
+         app: synon
+    spec:
+       nodeSelector: 
+         type: master
+       tolerations: 
+         - effect: NoSchedule
+           key: node-role.kubernetes.io/master
+       containers:
+         - name: qa-redis
+           image: redis
+           imagePullPolicy: IfNotPresent
+           ports:
+            - containerPort: 6379
+           command: 
+            - "redis-server"
+           volumeMounts:
+             - mountPath: /data
+               name: ebs-volume-claim
+  volumeClaimTemplates:
+    - metadata:
+        name: ebs-volume-claim
+        annotations:
+            purpose: this volume claim uses ebs storage class and provisions volume that user requested
+        labels:
+            type: dynamic-provisiong
+            cloudprovider: aws
+            volumetype: gp2
+      spec:
+        accessModes:
+            - ReadWriteOnce
+        storageClassName: ebs-volume
+        resources:
+            requests: 
+                storage: 8Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: synon-redis-master
+  labels:
+    app: synon
+spec:
+  selector: 
+    app: synon
+  ports:
+    - targetPort: 6379
+      port: 6379
+      name: redisport
+  type: ClusterIP   
