@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  annotations: 
+    description: nginx deployment with 5 replicas
+  labels:
+    app: webapp
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+       app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:  
+        nodeName: node01
+        containers:
+           - name: webapp-container
+             image: nginx
+             ports:
+               - containerPort: 80
+         

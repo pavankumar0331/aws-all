@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kubernetes-deamon-set
+  annotations:
+     description: Creating a deamonset with node tolerations
+  labels:
+    exam: devops
+    difficulty: medium
+spec:
+  selector:
+    matchLabels:
+      exam: devops
+      difficulty: medium
+  template:
+    metadata:
+      labels: 
+        exam: devops
+        difficulty: medium
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      containers:
+        - name: deamon-set-containers
+          image: ubuntu
+          command: ["/bin/sh"]
+          args: ["-c", "while true; do echo hello; sleep 10;done"]
